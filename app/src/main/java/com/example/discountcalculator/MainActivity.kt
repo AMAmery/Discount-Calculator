@@ -1,6 +1,5 @@
 package com.example.discountcalculator
 
-import android.media.Image
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -43,13 +42,14 @@ val blackGrayColorId = R.color.BlackGray
 val cyanAquaColorId = R.color.CyanAqua
 val extraLightBlueColorId = R.color.ExtraLightBlue
 val tealColorId = R.color.Teal
-
+lateinit var calculator : Calculator
 class MainActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.Q)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             DiscountCalculatorTheme {
+                calculator = Calculator()
                 GreetingPreview()
 
             }
@@ -57,6 +57,16 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+fun formatNumber(textState:String):String{
+
+    var result = textState
+
+    result = "%,d".format(result.toLong())
+    result = result.replace("٬", ",")
+
+    return result
+
+}
 
 fun apostropheRemover(input: String): String {
     var result = ""
@@ -117,7 +127,7 @@ fun GreetingPreview() {
 
         var priceState by remember { mutableStateOf("") }
         var discountState by remember { mutableStateOf("") }
-        var result by remember { mutableStateOf("") }
+        var resultState by remember { mutableStateOf("") }
         var gainState by remember { mutableStateOf("") }
 
         Column(
@@ -148,8 +158,11 @@ fun GreetingPreview() {
                             if (priceState != "") {
                                 priceState = apostropheRemover(priceState)
                                 priceState = PersianToEnglish(priceState)
-                                priceState = "%,d".format(priceState.toLong())
-                                priceState = priceState.replace("٬", ",")
+                                resultState = calculator.discountPriceCalculator(priceState,discountState)
+                                gainState = calculator.gainCalculator(priceState,discountState)
+                                priceState = formatNumber(priceState)
+                                gainState = formatNumber(gainState)
+                                resultState = formatNumber(resultState)
                             }
                         } catch (e: Exception) {
                             Log.d("error__", "${e.message} : $priceState")
@@ -185,8 +198,19 @@ fun GreetingPreview() {
                     modifier = textFieldModifier,
                     value = discountState,
                     onValueChange = {
-                        if (it.isDigitsOnly() && "0$it".toInt() <= 100 && (it.length in 0..3)) {
+                        if (it.isDigitsOnly() && "0$it".toInt() <= 100 && (it.length <=3)) {
                             discountState = it
+                           try {
+                                priceState = apostropheRemover(priceState)
+                                priceState = PersianToEnglish(priceState)
+                                resultState = calculator.discountPriceCalculator(priceState, discountState)
+                                gainState = calculator.gainCalculator(priceState, discountState)
+                               priceState = formatNumber(priceState)
+                               gainState = formatNumber(gainState)
+                               resultState = formatNumber(resultState)
+                            }catch (e:Exception){
+                                Log.d("error__","${e.message} : $priceState")
+                            }
                         }
                     },
                     leadingIcon = {
@@ -217,7 +241,7 @@ fun GreetingPreview() {
                         .fillMaxWidth(),
                     horizontalArrangement = Arrangement.End
                 ) {
-                    CustomText(value = result, Modifier.padding(end = 5.dp), tealColorId)
+                    CustomText(value = resultState, Modifier.padding(end = 5.dp), tealColorId)
                     CustomText(value = ": نتیجه", Modifier.padding(end = 25.dp), cyanAquaColorId)
                 }
                 Row(
@@ -226,7 +250,7 @@ fun GreetingPreview() {
                     horizontalArrangement = Arrangement.End
                 ) {
                     CustomText(value = gainState, Modifier.padding(end = 5.dp), tealColorId)
-                    CustomText(value = ":  سود شما", Modifier.padding(end = 25.dp), cyanAquaColorId)
+                    CustomText(value = ": سود حاصل از خرید", Modifier.padding(end = 25.dp), cyanAquaColorId)
                 }
 
             }
