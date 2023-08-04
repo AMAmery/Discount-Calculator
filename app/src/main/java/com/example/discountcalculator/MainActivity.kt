@@ -65,10 +65,7 @@ class MainActivity : ComponentActivity() {
                 deviceLanguage = DeviceLanguage()
                 languageFont = deviceLanguage.whatFont()
                 formatter.applyPattern("#,###,###")
-                horizontalAlignment = if (deviceLanguage.deviceLanguageGS=="ar"|| deviceLanguage.deviceLanguageGS=="fa")
-                    Alignment.Start
-                else
-                    Alignment.End
+                horizontalAlignment = if (deviceLanguage.deviceLanguageGS=="ar"|| deviceLanguage.deviceLanguageGS=="fa") Alignment.Start else Alignment.End
 
                     GreetingPreview()
 
