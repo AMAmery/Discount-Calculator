@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">محاسبه گر تخفیف</string>
+
+    <string name="originalPriceText">قیمت اصلی</string>
+    <string name="discountText">تخفیف</string>
+    <string name="result">نتیجه : </string>
+    <string name="profitFromThePurchase"> سود حاصل از خرید :</string>
+
+</resources>

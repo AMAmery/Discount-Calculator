@@ -2,7 +2,6 @@ package com.example.discountcalculator
 
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.annotation.RequiresApi
@@ -18,6 +17,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -25,24 +25,36 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.text.isDigitsOnly
 import com.example.discountcalculator.ui.theme.DiscountCalculatorTheme
+import java.text.DecimalFormat
+import java.text.NumberFormat
+import java.util.Locale
 
-val blackGrayColorId = R.color.BlackGray
-val cyanAquaColorId = R.color.CyanAqua
-val extraLightBlueColorId = R.color.ExtraLightBlue
-val tealColorId = R.color.Teal
-lateinit var calculator : Calculator
+val yellowColorId = R.color.yellow
+val blackColorId = R.color.Black
+lateinit var calculator: Calculator
+var languageFont: FontFamily = FontFamily(Font(R.font.slabo_regular))
+lateinit var deviceLanguage: DeviceLanguage
+var horizontalAlignment = Alignment.Start
+val nf: NumberFormat = NumberFormat.getNumberInstance(Locale.US)
+val formatter = nf as DecimalFormat
+
 class MainActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.Q)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -50,68 +62,44 @@ class MainActivity : ComponentActivity() {
         setContent {
             DiscountCalculatorTheme {
                 calculator = Calculator()
-                GreetingPreview()
+                deviceLanguage = DeviceLanguage()
+                languageFont = deviceLanguage.whatFont()
+                formatter.applyPattern("#,###,###")
+                horizontalAlignment = if (deviceLanguage.deviceLanguageGS=="ar"|| deviceLanguage.deviceLanguageGS=="fa")
+                    Alignment.Start
+                else
+                    Alignment.End
+
+                    GreetingPreview()
 
             }
         }
     }
 }
 
-fun formatNumber(textState:String):String{
+fun formatNumber(textState: String): String = formatter.format(textState.toLong())
 
-    var result = textState
-
-    result = "%,d".format(result.toLong())
-    result = result.replace("٬", ",")
-
-    return result
-
-}
-
-fun apostropheRemover(input: String): String {
-    var result = ""
-    input.forEach { digit -> if (digit != ',') result += digit }
-
-    return result
-
-}
-
-fun PersianToEnglish(persianStr: String): String {
-    var result = ""
-    var en = '0'
-    for (ch in persianStr) {
-        en = ch
-        when (ch) {
-            '۰' -> en = '0'
-            '۱' -> en = '1'
-            '۲' -> en = '2'
-            '۳' -> en = '3'
-            '۴' -> en = '4'
-            '۵' -> en = '5'
-            '۶' -> en = '6'
-            '۷' -> en = '7'
-            '۸' -> en = '8'
-            '۹' -> en = '9'
-        }
-        result = "${result}$en"
-    }
-    return result
-}
+fun apostropheRemover(input: String): String = input.filterNot { it == ',' }
 
 @RequiresApi(Build.VERSION_CODES.Q)
 @Composable
-fun CustomText(value: String, modifier: Modifier, colorId: Int) {
+fun CustomText(
+    value: String,
+    modifier: Modifier,
+    colorId: Int
+) {
 
     Text(
         modifier = modifier,
         text = value,
-        fontFamily = FontFamily(Font(R.font.mikhak_medium)),
-        fontWeight = FontWeight.ExtraBold,
+        fontFamily = languageFont,
+        fontWeight = FontWeight.Normal,
         color = colorResource(id = colorId),
         fontSize = 20.sp
     )
 
 }
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.Q)
@@ -121,9 +109,9 @@ fun GreetingPreview() {
     DiscountCalculatorTheme {
 
         // common attributes for textField
-        var textFieldModifier = Modifier
+        val textFieldModifier = Modifier
             .fillMaxWidth()
-            .padding(start = 25.dp, end = 25.dp)
+            .padding(start = 25.dp, end = 25.dp, top = 15.dp)
 
         var priceState by remember { mutableStateOf("") }
         var discountState by remember { mutableStateOf("") }
@@ -133,41 +121,39 @@ fun GreetingPreview() {
         Column(
             Modifier
                 .fillMaxSize()
-                .background(colorResource(id = blackGrayColorId)),
-            verticalArrangement = Arrangement.Center
+                .background(colorResource(id = blackColorId)),
+            verticalArrangement = Arrangement.Top
         ) {
 
             Column(
                 Modifier
-                    .fillMaxWidth(),
-                horizontalAlignment = Alignment.End
+                    .fillMaxWidth()
+                    .padding(top = 35.dp)
             ) {
 
                 CustomText(
-                    value = "قیمت اصلی",
+                    value = stringResource(id = R.string.originalPriceText),
                     Modifier.padding(start = 25.dp, end = 25.dp),
-                    cyanAquaColorId
+                    yellowColorId
                 )
 
-                OutlinedTextField(
-                    modifier = textFieldModifier,
+                OutlinedTextField(modifier = textFieldModifier,
                     value = priceState,
                     onValueChange = {
-                        try {
-                            priceState = it
-                            if (priceState != "") {
-                                priceState = apostropheRemover(priceState)
-                                priceState = PersianToEnglish(priceState)
-                                resultState = calculator.discountPriceCalculator(priceState,discountState)
-                                gainState = calculator.gainCalculator(priceState,discountState)
-                                priceState = formatNumber(priceState)
-                                gainState = formatNumber(gainState)
-                                resultState = formatNumber(resultState)
-                            }
-                        } catch (e: Exception) {
-                            Log.d("error__", "${e.message} : $priceState")
+                        priceState = it
+                        if (priceState != "") {
+                            priceState = apostropheRemover(priceState)
+                            resultState =
+                                calculator.discountPriceCalculator(priceState, discountState)
+                            gainState = calculator.gainCalculator(priceState, discountState)
+                            priceState = formatNumber(priceState)
+                            gainState = formatNumber(gainState)
+                            resultState = formatNumber(resultState)
                         }
-                    },
+                    }, colors = TextFieldDefaults.outlinedTextFieldColors(
+                        focusedBorderColor = colorResource(id = yellowColorId),
+                        unfocusedBorderColor = Color.Gray
+                    ),
                     leadingIcon = {
                         Image(
                             painter = painterResource(id = R.drawable.money),
@@ -176,81 +162,127 @@ fun GreetingPreview() {
                     },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     textStyle = TextStyle(
-                        color = colorResource(id = extraLightBlueColorId),
+                        color = colorResource(id = yellowColorId),
                         fontSize = 25.sp,
-                        fontFamily = FontFamily(Font(R.font.gandom_fd))
-                    )
-                )
+                    ),
+                    placeholder = {
+                        Text(
+                            text = "350,000", color = Color.Gray,
+                            fontSize = 18.sp,
+                        )
+                    })
+
 
             }
             Column(
-                Modifier
-                    .fillMaxWidth(),
-                horizontalAlignment = Alignment.End,
-                verticalArrangement = Arrangement.Center
+                Modifier.fillMaxWidth(), verticalArrangement = Arrangement.Center
             ) {
                 CustomText(
-                    value = "تخفیف",
-                    Modifier.padding(start = 25.dp, end = 25.dp),
-                    blackGrayColorId
+                    value = stringResource(id = R.string.discountText),
+                    Modifier.padding(start = 25.dp, end = 25.dp, top = 15.dp),
+                    yellowColorId
                 )
-                OutlinedTextField(
-                    modifier = textFieldModifier,
+                OutlinedTextField(modifier = textFieldModifier,
                     value = discountState,
                     onValueChange = {
-                        if (it.isDigitsOnly() && "0$it".toInt() <= 100 && (it.length <=3)) {
+                        if (it.isDigitsOnly() && "0$it".toInt() <= 100 && (it.length <= 3)) {
                             discountState = it
-                           try {
-                                priceState = apostropheRemover(priceState)
-                                priceState = PersianToEnglish(priceState)
-                                resultState = calculator.discountPriceCalculator(priceState, discountState)
-                                gainState = calculator.gainCalculator(priceState, discountState)
-                               priceState = formatNumber(priceState)
-                               gainState = formatNumber(gainState)
-                               resultState = formatNumber(resultState)
-                            }catch (e:Exception){
-                                Log.d("error__","${e.message} : $priceState")
-                            }
+                            priceState = apostropheRemover(priceState)
+                            resultState =
+                                calculator.discountPriceCalculator(priceState, discountState)
+                            gainState = calculator.gainCalculator(priceState, discountState)
+                            priceState = formatNumber(priceState)
+                            gainState = formatNumber(gainState)
+                            resultState = formatNumber(resultState)
                         }
-                    },
+                    }, colors = TextFieldDefaults.outlinedTextFieldColors(
+                        focusedBorderColor = colorResource(id = yellowColorId),
+                        unfocusedBorderColor = Color.Gray
+                    ),
                     leadingIcon = {
                         Image(
-                            painter = painterResource(id = R.drawable.money),
-                            contentDescription = "money"
+                            painter = painterResource(id = R.drawable.discount),
+                            contentDescription = "discount"
                         )
                     },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     textStyle = TextStyle(
-                        color = colorResource(id = extraLightBlueColorId),
+                        color = colorResource(id = yellowColorId),
                         fontSize = 25.sp,
-                        fontFamily = FontFamily(Font(R.font.gandom_fd))
                     ),
-                    singleLine = true
-                )
+                    singleLine = true,
+                    placeholder = {
+                        Text(
+                            text = "25", color = Color.Gray,
+                            fontSize = 18.sp,
+                        )
+                    })
             }
             Column(
                 Modifier
                     .fillMaxWidth()
                     .padding(top = 25.dp),
-                horizontalAlignment = Alignment.End,
-                verticalArrangement = Arrangement.Center
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = horizontalAlignment
             ) {
 
                 Row(
                     Modifier
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
+                        .fillMaxWidth()
+                        .padding(end = 25.dp, start = 25.dp),
                 ) {
-                    CustomText(value = resultState, Modifier.padding(end = 5.dp), tealColorId)
-                    CustomText(value = ": نتیجه", Modifier.padding(end = 25.dp), cyanAquaColorId)
+
+                    Text(
+                        text = buildAnnotatedString {
+
+                            append(stringResource(id = R.string.result))
+
+                            withStyle(
+                                SpanStyle(
+                                    fontFamily = languageFont,
+                                    fontWeight = FontWeight.Normal,
+                                    color = Color.LightGray,
+                                    fontSize = 20.sp
+                                )
+                            ) {
+                                append(" $resultState")
+                            }
+
+                        },
+                        fontFamily = languageFont,
+                        fontWeight = FontWeight.Normal,
+                        color = colorResource(id = yellowColorId),
+                        fontSize = 20.sp
+                    )
+
                 }
                 Row(
                     Modifier
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
+                        .fillMaxWidth()
+                        .padding(end = 25.dp, start = 25.dp),
                 ) {
-                    CustomText(value = gainState, Modifier.padding(end = 5.dp), tealColorId)
-                    CustomText(value = ": سود حاصل از خرید", Modifier.padding(end = 25.dp), cyanAquaColorId)
+                    Text(
+                        text = buildAnnotatedString {
+
+                            append(stringResource(id = R.string.profitFromThePurchase))
+
+                            withStyle(
+                                SpanStyle(
+                                    fontFamily = languageFont,
+                                    fontWeight = FontWeight.Normal,
+                                    color = Color.LightGray,
+                                    fontSize = 20.sp
+                                )
+                            ) {
+                                append(" $gainState")
+                            }
+
+                        },
+                        fontFamily = languageFont,
+                        fontWeight = FontWeight.Normal,
+                        color = colorResource(id = yellowColorId),
+                        fontSize = 20.sp
+                    )
                 }
 
             }

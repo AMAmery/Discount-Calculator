@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">Discount Calculator</string>
+
+    <string name="originalPriceText">original price</string>
+    <string name="discountText">discount</string>
+    <string name="result">result :</string>
+    <string name="profitFromThePurchase">Profit from the purchase :</string>
+
 </resources>

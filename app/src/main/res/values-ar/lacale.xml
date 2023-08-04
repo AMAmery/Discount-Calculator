@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">حاسبة الخصم</string>
+
+    <string name="originalPriceText">السعر الأصلي</string>
+    <string name="discountText">تخفيض</string>
+    <string name="result"> نتيجة :</string>
+    <string name="profitFromThePurchase">الربح من الشراء :</string>
+
+</resources>

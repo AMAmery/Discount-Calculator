@@ -8,8 +8,6 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 
-    <color name="BlackGray">#40514E</color>
-    <color name="Teal">#30E3CA</color>
-    <color name="CyanAqua">#11999E</color>
-    <color name="ExtraLightBlue">#E4F9F5</color>
+    <color name="Black">#292826</color>
+    <color name="yellow">#F9D342</color>
 </resources>
